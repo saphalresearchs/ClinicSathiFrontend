@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: white;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .logo {
+            margin: 20px 0;
+            text-align: center;
+        }
+        .logo img {
+            width: 150px; /* Adjust the size as needed */
+        }
+        .login-form {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 300px;
+            text-align: center;
+        }
+        .login-form h1 {
+            color: black;
+            margin-bottom: 20px;
+        }
+        .login-form input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        .login-form button {
+            background-color: #ff007f; /* Rose Red */
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin-top: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+        }
+        .login-form button:hover {
+            background-color: #e60073; /* Darker Rose Red */
+        }
+        .links {
+            margin-top: 20px;
+            text-align: center;
+        }
+        .links a {
+            color: #ff007f; /* Rose Red */
+            text-decoration: none;
+            margin: 0 10px;
+        }
+        .links a:hover {
+            text-decoration: underline;
+        }
+        .message {
+            color: black;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Logo Section -->
+    <div class="logo">
+        <img src="CLINIC-SATHi_logo.gif" alt="Logo"> <!-- Replace "logo.png" with your logo file path -->
+    </div>
+
+    <!-- Login Form -->
+    <div class="login-form">
+        <h1>Login</h1>
+        <input type="text" id="username" placeholder="Username" required>
+        <input type="password" id="password" placeholder="Password" required>
+        <button onclick="login()">Login</button>
+        <p class="message" id="message"></p>
+
+        <!-- Links to Signup and Password Reset -->
+        <div class="links">
+            <a href="role_selection.html">Sign Up</a>
+            <a href="forget_password.html">Forgot Password?</a>
+        </div>
+    </div>
+
+    <script>
+        async function login() {
+    const username = document.getElementById('username').value;
+    const password = document.getElementById('password').value;
+
+    try {
+        const response = await fetch('http://127.0.0.1:8000/api/login/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ username, password })
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+            // ✅ Store JWT token in localStorage
+            localStorage.setItem('token', result.access); // Ensure the token is stored correctly
+            
+            // ✅ Store user role (assuming backend sends a "role" field)
+            const userRole = result.role; // Ensure backend includes role in response
+            localStorage.setItem('userRole', userRole);
+
+            // ✅ Display success message
+            document.getElementById('message').textContent = 'Login successful! Redirecting...';
+
+            // ✅ Redirect based on role
+            let redirectPage = 'login.html'; // Default fallback
+            if (userRole === 'patient') {
+                redirectPage = 'patient_dashboard.html';
+            } else if (userRole === 'doctor') {
+                redirectPage = 'doctor_dashboard.html';
+            } else if (userRole === 'admin') {
+                redirectPage = 'admin_dashboard.html';
+            }
+
+            setTimeout(() => {
+                window.location.href = redirectPage; // Redirect to the correct dashboard
+            }, 2000);
+
+        } else {
+            document.getElementById('message').textContent = result.message || 'Login failed. Please try again.';
+        }
+    } catch (error) {
+        document.getElementById('message').textContent = 'An error occurred. Please try again.';
+    }
+}
+
+    </script>
+</body>
+</html>

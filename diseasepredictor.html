@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Disease Predictor</title>
+    <link rel="stylesheet" href="predictor.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Disease Diagnosis System</h1>
+
+        <label for="symptoms">Choose Symptoms:</label>
+        <select id="symptoms" multiple>
+            <!-- Options will be added dynamically -->
+        </select>
+
+        <!-- Display selected symptoms -->
+        <div id="selected-symptoms"></div>
+
+        <button onclick="predictDisease()">Predict</button>
+
+        <p id="result"></p>
+    </div>
+
+    <script src="predict.js"></script>
+</body>
+</html>

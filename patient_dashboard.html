@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Patient Dashboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: white;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .dashboard {
+            width: 80%;
+            max-width: 800px;
+            margin: 20px;
+        }
+        .appointment-form {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+        .appointment-form h2 {
+            color: black;
+            margin-bottom: 20px;
+        }
+        .appointment-form input, .appointment-form textarea {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        .appointment-form button {
+            background-color: #ff007f; /* Rose Red */
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin-top: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+        }
+        .predictor button {
+            background-color: #ff007f; /* Rose Red */
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin-top: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 30%;
+        }
+        .predictor a{
+            color: white;
+        }
+        .appointment-form button:hover {
+            background-color: #e60073; /* Darker Rose Red */
+        }
+        .message {
+            color: black;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+        <h1>Patient Dashboard</h1>
+
+        <!-- Appointment Booking Form -->
+        <div class="appointment-form">
+            <h2>Book an Appointment</h2>
+            <input type="text" id="doctor-username" placeholder="Doctor Username" required>
+            <input type="date" id="appointment-date" placeholder="Date" required>
+            <input type="time" id="appointment-time" placeholder="Time" required>
+            <textarea id="reason" placeholder="Reason for Appointment" rows="4" required></textarea>
+            <button onclick="bookAppointment()">Book Appointment</button>
+            <p class="message" id="booking-message"></p>
+        </div>
+        <div class="predictor">
+            <h2>Disease Predictor</h2>
+            <p>You have to input your symptyoms to get diagnosis.</p> 
+            <button><a href="diseasepredictor.html" style="text-decoration:none">Input Symptoyms</a></button>
+        </div>
+        <h3>My Appointment</h3>
+        <div id="latest-appointment" class="card">
+            <p>Loading latest appointment...</p>
+        </div>
+        <button class="see-more-btn" onclick="window.location.href='patient_appointments.html'">See More</button>
+    </div>
+
+    </div>
+
+    <script>
+        async function bookAppointment() {
+            const doctorUsername = document.getElementById('doctor-username').value;
+            const date = document.getElementById('appointment-date').value;
+            const time = document.getElementById('appointment-time').value;
+            const reason = document.getElementById('reason').value;
+
+            const data = {
+                doctor_username: doctorUsername,
+                date: date,
+                time: time,
+                reason: reason
+            };
+
+            try {
+                const token = localStorage.getItem('token');
+                if (!token) {
+                    throw new Error('No token found. Please log in.');
+                }
+
+                const response = await fetch('http://127.0.0.1:8000/api/appointments/book/', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+                if (response.ok) {
+                    document.getElementById('booking-message').textContent = result.message || 'Appointment booked successfully!';
+                } else {
+                    document.getElementById('booking-message').textContent = result.message || 'Failed to book appointment. Please try again.';
+                }
+            } catch (error) {
+                document.getElementById('booking-message').textContent = error.message || 'An error occurred. Please try again.';
+            }
+        }
+        async function fetchLatestAppointment() {
+            try {
+                const response = await fetch(`${API_BASE}/appointments/patient/`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await response.json();
+
+                const latestAppointmentDiv = document.getElementById("latest-appointment");
+                latestAppointmentDiv.innerHTML = "";
+
+                if (data.length === 0) {
+                    latestAppointmentDiv.innerHTML = "<p>No upcoming appointments found.</p>";
+                    return;
+                }
+
+                // Sort appointments by date (earliest first)
+                const sortedAppointments = data.sort((a, b) => new Date(a.date) - new Date(b.date));
+                const latestAppointment = sortedAppointments[0]; // Get the earliest upcoming appointment
+
+                latestAppointmentDiv.innerHTML = `
+                    <p><strong>Date:</strong> ${latestAppointment.date} | <strong>Time:</strong> ${latestAppointment.time}</p>
+                    <p><strong>Status:</strong> ${latestAppointment.status}</p>
+                    <p><strong>Reason:</strong> ${latestAppointment.reason}</p>
+                `;
+            } catch (error) {
+                console.error("Error fetching latest appointment:", error);
+            }
+        }
+
+        // Load latest appointment on page load
+        fetchLatestAppointment();
+    </script>
+</body>
+</html>

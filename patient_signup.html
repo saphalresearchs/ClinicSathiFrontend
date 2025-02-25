@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Patient Signup</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .signup-form {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 300px;
+            text-align: center;
+        }
+        .signup-form h1 {
+            color: black;
+            margin-bottom: 20px;
+        }
+        .signup-form input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        .signup-form button {
+            background-color: #ff007f; /* Rose Red */
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin-top: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+        }
+        .signup-form button:hover {
+            background-color: #e60073; /* Darker Rose Red */
+        }
+        .message {
+            color: black;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="signup-form">
+        <h1>Patient Signup</h1>
+        <input type="text" id="username" placeholder="Username" required>
+        <input type="password" id="password" placeholder="Password" required>
+        <input type="email" id="email" placeholder="Email" required>
+        <input type="text" id="phone" placeholder="Phone" required>
+        <button onclick="registerPatient()">Sign Up</button>
+        <p class="message" id="message"></p>
+    </div>
+
+    <script>
+        async function registerPatient() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const email = document.getElementById('email').value;
+            const phone = document.getElementById('phone').value;
+
+            const data = {
+                user: {
+                    username: username,
+                    role: "patient",
+                    password: password,
+                    email: email
+                },
+                phone: phone
+            };
+
+            try {
+                const response = await fetch('http://127.0.0.1:8000/api/register/patient/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+                if (response.ok) {
+                    document.getElementById('message').textContent = result.message;
+                    setTimeout(() => {
+                        window.location.href = "login.html"; // Redirect to homepage
+                    }, 2000); // Redirect after 2 seconds
+                } else {
+                    document.getElementById('message').textContent = result.message || "Signup failed. Please try again.";
+                }
+            } catch (error) {
+                document.getElementById('message').textContent = "An error occurred. Please try again.";
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,93 @@
+/* General Styles */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #fff5f7; /* Light rose background */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+}
+
+/* Main container */
+.container {
+    background: white;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    width: 400px;
+}
+
+/* Header */
+h1 {
+    color: #d6336c; /* Rose color */
+}
+
+/* Labels */
+label {
+    display: block;
+    margin-top: 15px;
+    font-weight: bold;
+    color: black;
+}
+
+/* Multi-select dropdown */
+select {
+    width: 100%;
+    height: 120px;
+    margin: 10px 0;
+    padding: 8px;
+    border: 1px solid #d6336c;
+    border-radius: 5px;
+    font-size: 14px;
+    color: black;
+}
+
+/* Selected symptoms list */
+#selected-symptoms {
+    margin-top: 10px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+/* Symptom tag */
+.symptom-tag {
+    background: #d6336c;
+    color: white;
+    padding: 5px 10px;
+    margin: 5px;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    font-size: 14px;
+}
+
+/* Remove button (X) */
+.remove-btn {
+    background: transparent;
+    border: none;
+    color: white;
+    font-weight: bold;
+    margin-left: 8px;
+    cursor: pointer;
+}
+
+/* Predict Button */
+button {
+    background: #d6336c; /* Rose button */
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+button:hover {
+    background: #b82d5b; /* Darker rose */
+}
+
+/* Result Message

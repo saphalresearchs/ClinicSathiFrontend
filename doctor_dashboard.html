@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Doctor Dashboard</title>
+    <style>
+        /* Rose & White Theme */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: white;
+            color: black;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 900px;
+            margin: auto;
+            padding: 20px;
+        }
+        h2 {
+            color: #d63384; /* Rose Color */
+            text-align: center;
+        }
+        .card {
+            background: #fff0f6; /* Light rose background */
+            border: 1px solid #d63384;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+        }
+        button {
+            padding: 8px 12px;
+            margin: 5px;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            border-radius: 5px;
+        }
+        .confirm-btn {
+            background-color: #d63384; /* Rose */
+            color: white;
+        }
+        .cancel-btn {
+            background-color: #ff4d4f;
+            color: white;
+        }
+        .prescription-btn {
+            background-color: #52c41a;
+            color: white;
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Doctor Dashboard</h2>
+
+        <!-- Notification Panel -->
+        <h3>🔔 Notifications</h3>
+        <div id="notifications" class="card">
+            No new notifications.
+        </div>
+
+        <!-- Appointment Management -->
+        <h3>📅 Manage Appointments</h3>
+        <div id="appointments"></div>
+
+        <!-- Prescription Management -->
+        <h3>💊 Prescription Management</h3>
+        <div id="prescriptions"></div>
+    </div>
+
+    <script>
+        const API_BASE = "http://127.0.0.1:8000/api"; 
+        const token = localStorage.getItem('token');
+        const userRole = localStorage.getItem('role');
+
+        // Redirect if not a doctor
+
+        // Fetch and display pending appointments
+        async function fetchAppointments() {
+    try {
+        const response = await fetch(`${API_BASE}/appointments/doctor/`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await response.json();
+
+        // Filter only pending appointments
+        const pendingAppointments = data.filter(appointment => appointment.status === "pending");
+
+        const appointmentsDiv = document.getElementById("appointments");
+        appointmentsDiv.innerHTML = "";
+
+        if (pendingAppointments.length === 0) {
+            appointmentsDiv.innerHTML = "<p>No pending appointments.</p>";
+            return;
+        }
+
+        pendingAppointments.forEach(appointment => {
+            const appointmentCard = document.createElement("div");
+            appointmentCard.classList.add("card");
+            appointmentCard.innerHTML = `
+                <p><strong>Date:</strong> ${appointment.date} | <strong>Time:</strong> ${appointment.time}</p>
+                <p><strong>Reason:</strong> ${appointment.reason}</p>
+                <button class="confirm-btn" onclick="updateAppointment(${appointment.id}, 'confirmed')">Confirm</button>
+                <button class="cancel-btn" onclick="updateAppointment(${appointment.id}, 'cancelled')">Cancel</button>
+            `;
+            appointmentsDiv.appendChild(appointmentCard);
+        });
+    } catch (error) {
+        console.error("Error fetching appointments:", error);
+    }
+}
+
+
+        // Update appointment status (Confirm/Cancel)
+        async function updateAppointment(appointmentId, status) {
+    // Ensure correct API status format
+    const apiStatus = status === "cancelled" ? "canceled" : status;
+
+    try {
+        const response = await fetch(`${API_BASE}/appointments/manage/${appointmentId}/`, {
+            method: "PATCH",
+            headers: {
+                "Authorization": `Bearer ${token}`,
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ status: apiStatus })  // Send correct status
+        });
+
+        if (!response.ok) {
+            throw new Error("Failed to update appointment.");
+        }
+
+        const result = await response.json();
+        console.log("Appointment updated:", result);
+
+        // Show success message
+        alert(`Appointment ${status} successfully!`);
+
+        // Refresh the pending appointments list
+        fetchAppointments();
+    } catch (error) {
+        console.error("Error updating appointment:", error);
+        alert("Failed to update appointment. Please try again.");
+    }
+}
+
+
+
+        // Fetch and display completed appointments for prescription upload
+        async function fetchCompletedAppointments() {
+            try {
+                const response = await fetch(`${API_BASE}/appointments/`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await response.json();
+
+                const prescriptionsDiv = document.getElementById("prescriptions");
+                prescriptionsDiv.innerHTML = "";
+
+                const completedAppointments = data.filter(app => app.status === "completed");
+                if (completedAppointments.length === 0) {
+                    prescriptionsDiv.innerHTML = "<p>No completed appointments requiring prescriptions.</p>";
+                    return;
+                }
+
+                completedAppointments.forEach(appointment => {
+                    const prescriptionCard = document.createElement("div");
+                    prescriptionCard.classList.add("card");
+                    prescriptionCard.innerHTML = `
+                        <p><strong>Date:</strong> ${appointment.date} | <strong>Time:</strong> ${appointment.time}</p>
+                        <p><strong>Reason:</strong> ${appointment.reason}</p>
+                        <textarea id="prescription-${appointment.id}" placeholder="Enter prescription here..."></textarea>
+                        <button class="prescription-btn" onclick="uploadPrescription(${appointment.id})">Upload</button>
+                    `;
+                    prescriptionsDiv.appendChild(prescriptionCard);
+                });
+            } catch (error) {
+                console.error("Error fetching completed appointments:", error);
+            }
+        }
+
+        // Upload prescription for a completed appointment
+        async function uploadPrescription(id) {
+            const prescriptionText = document.getElementById(`prescription-${id}`).value;
+            if (!prescriptionText) {
+                alert("Please enter a prescription.");
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/appointments/${id}/upload-prescription/`, {
+                    method: "PATCH",
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ prescription: prescriptionText })
+                });
+
+                const data = await response.json();
+                alert("Prescription uploaded successfully!");
+                fetchCompletedAppointments();
+            } catch (error) {
+                console.error("Error uploading prescription:", error);
+            }
+        }
+
+        // Fetch notifications (Placeholder for future API integration)
+        function fetchNotifications() {
+            document.getElementById("api/notifications").innerHTML = "✅ No new notifications.";
+        }
+
+        // Initialize dashboard
+        fetchAppointments();
+        fetchCompletedAppointments();
+        fetchNotifications();
+    </script>
+</body>
+</html>

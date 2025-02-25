@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Doctor Signup</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .signup-form {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 300px;
+            text-align: center;
+        }
+        .signup-form h1 {
+            color: black;
+            margin-bottom: 20px;
+        }
+        .signup-form input, .signup-form select {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        .signup-form button {
+            background-color: #ff007f; /* Rose Red */
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin-top: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+        }
+        .signup-form button:hover {
+            background-color: #e60073; /* Darker Rose Red */
+        }
+        .message {
+            color: black;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="signup-form">
+        <h1>Doctor Signup</h1>
+        <input type="text" id="username" placeholder="Username" required>
+        <input type="password" id="password" placeholder="Password" required>
+        <input type="email" id="email" placeholder="Email" required>
+        <select id="specialization" required>
+            <option value="" disabled selected>Select Specialization</option>
+            <option value="Family Physician">Family Physician</option>
+            <option value="Internist">Internist</option>
+            <option value="Pediatrician">Pediatrician</option>
+            <option value="Cardiologist">Cardiologist</option>
+            <option value="Dermatologist">Dermatologist</option>
+            <option value="Neurologist">Neurologist</option>
+            <option value="Psychiatrist">Psychiatrist</option>
+            <option value="Orthopedist">Orthopedist</option>
+            <option value="OB-GYN">Obstetrician-Gynecologist (OB-GYN)</option>
+            <option value="Radiologist">Radiologist</option>
+        </select>
+        <input type="text" id="licenseNum" placeholder="License Number" required>
+        <input type="file" id="profilePic" accept="image/*" required>
+        <input type="file" id="certificatePic" accept="image/*" required>
+        <button onclick="registerDoctor()">Sign Up</button>
+        <p class="message" id="message"></p>
+    </div>
+
+    <script>
+        async function registerDoctor() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const email = document.getElementById('email').value;
+            const specialization = document.getElementById('specialization').value;
+            const licenseNum = document.getElementById('licenseNum').value;
+            const profilePic = document.getElementById('profilePic').files[0];
+            const certificatePic = document.getElementById('certificatePic').files[0];
+
+            // Create the user object
+            const user = {
+                username: username,
+                password: password,
+                email: email,
+                role: 'doctor'
+            };
+
+            // Convert the user object to a JSON string
+            const userJson = JSON.stringify(user);
+
+            // Create FormData object to handle file uploads
+            const formData = new FormData();
+            formData.append('user', userJson); // Append user as a JSON string
+            formData.append('specialization', specialization);
+            formData.append('license_number', licenseNum);
+            formData.append('profile_picture', profilePic);
+            formData.append('certificate_picture', certificatePic);
+
+            try {
+                const response = await fetch('http://127.0.0.1:8000/api/register/doctor/', {
+                    method: 'POST',
+                    body: formData // No need to set Content-Type header for FormData
+                });
+
+                const result = await response.json();
+                if (response.ok) {
+                    document.getElementById('message').textContent = result.message;
+                    setTimeout(() => {
+                        window.location.href = "login.html"; // Redirect to homepage
+                    }, 2000); // Redirect after 2 seconds
+                } else {
+                    document.getElementById('message').textContent = result.message || "Signup failed. Please try again.";
+                }
+            } catch (error) {
+                document.getElementById('message').textContent = "An error occurred. Please try again.";
+            }
+        }
+    </script>
+</body>
+</html>
