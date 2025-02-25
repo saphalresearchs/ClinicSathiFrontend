@@ -52,6 +52,10 @@
         .hidden {
             display: none;
         }
+        .prescription-btn {
+            background-color: #d63384;
+            color: white;
+        }
     </style>
 </head>
 <body>
@@ -69,8 +73,9 @@
         <div id="appointments"></div>
 
         <!-- Prescription Management -->
-        <h3>💊 Prescription Management</h3>
-        <div id="prescriptions"></div>
+        <h3>Upload prescriptions</h3>
+        <p>Provide prescription to completed appointments</p>
+        <button class="prescription-btn" onclick="window.location.href='prescriptions.html'">View Completed Appointments</button>
     </div>
 
     <script>

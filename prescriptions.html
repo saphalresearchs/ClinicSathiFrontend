@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Prescription</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: white;
+            color: black;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 900px;
+            margin: auto;
+            padding: 20px;
+        }
+        h2 {
+            color: #d63384;
+            text-align: center;
+        }
+        .card {
+            background: #fff0f6;
+            border: 1px solid #d63384;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+        }
+        textarea {
+            width: 100%;
+            height: 60px;
+            margin-top: 10px;
+            padding: 5px;
+        }
+        button {
+            padding: 8px 12px;
+            margin: 5px;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            border-radius: 5px;
+        }
+        .upload-btn {
+            background-color: #52c41a;
+            color: white;
+        }
+        .disabled {
+            background-color: gray;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>💊 Upload Prescriptions</h2>
+        <div id="appointments"></div>
+    </div>
+
+    <script>
+        const API_BASE = "http://127.0.0.1:8000/api"; 
+        const token = localStorage.getItem('token');
+
+        if (!token) {
+            alert("Access Denied. Please log in.");
+            window.location.href = "login.html";
+        }
+
+        async function fetchCompletedAppointments() {
+            try {
+                const response = await fetch(`${API_BASE}/appointments/doctor/`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await response.json();
+
+                const appointmentsDiv = document.getElementById("appointments");
+                appointmentsDiv.innerHTML = "";
+
+                const completedAppointments = data.filter(app => app.status === "completed");
+
+                if (completedAppointments.length === 0) {
+                    appointmentsDiv.innerHTML = "<p>No completed appointments require prescriptions.</p>";
+                    return;
+                }
+
+                completedAppointments.forEach(appointment => {
+                    const appointmentCard = document.createElement("div");
+                    appointmentCard.classList.add("card");
+
+                    if (appointment.prescription) {
+                        // If prescription exists, show it and disable input
+                        appointmentCard.innerHTML = `
+                            <p><strong>Date:</strong> ${appointment.date} | <strong>Time:</strong> ${appointment.time}</p>
+                            <p><strong>Reason:</strong> ${appointment.reason}</p>
+                            <p><strong>Prescription:</strong> ${appointment.prescription}</p>
+                        `;
+                    } else {
+                        // If no prescription, show input and button
+                        appointmentCard.innerHTML = `
+                            <p><strong>Date:</strong> ${appointment.date} | <strong>Time:</strong> ${appointment.time}</p>
+                            <p><strong>Reason:</strong> ${appointment.reason}</p>
+                            <textarea id="prescription-${appointment.id}" placeholder="Enter prescription..."></textarea>
+                            <button class="upload-btn" onclick="uploadPrescription(${appointment.id})">Upload Prescription</button>
+                        `;
+                    }
+
+                    appointmentsDiv.appendChild(appointmentCard);
+                });
+            } catch (error) {
+                console.error("Error fetching completed appointments:", error);
+            }
+        }
+
+        async function uploadPrescription(appointmentId) {
+            const prescriptionText = document.getElementById(`prescription-${appointmentId}`).value;
+            if (!prescriptionText) {
+                alert("Please enter a prescription.");
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/appointments/${appointmentId}/upload-prescription/`, {
+                    method: "PATCH",
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ prescription: prescriptionText })
+                });
+
+                if (!response.ok) {
+                    throw new Error("Failed to upload prescription.");
+                }
+
+                alert("Prescription uploaded successfully!");
+
+                // Disable textarea and button after successful upload
+                fetchCompletedAppointments();
+            } catch (error) {
+                console.error("Error uploading prescription:", error);
+            }
+        }
+
+        fetchCompletedAppointments();
+    </script>
+</body>
+</html>

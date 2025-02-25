@@ -40,10 +40,6 @@
             background-color: #52c41a;
             color: white;
         }
-        .reschedule-btn {
-            background-color: #ffa940;
-            color: white;
-        }
         .disabled {
             background-color: gray;
             cursor: not-allowed;
@@ -60,13 +56,11 @@
         const API_BASE = "http://127.0.0.1:8000/api"; 
         const token = localStorage.getItem('token');
 
-        // Redirect if token is missing (user not logged in)
         if (!token) {
             alert("Access Denied. Please log in.");
             window.location.href = "login.html";
         }
 
-        // Fetch all patient appointments
         async function fetchAppointments() {
             try {
                 const response = await fetch(`${API_BASE}/appointments/patient/`, {
@@ -87,19 +81,9 @@
                     appointmentCard.classList.add("card");
 
                     let buttons = "";
-                    
-                    // If confirmed, allow "Mark as Completed" & Reschedule
+
                     if (appointment.status === "confirmed") {
-                        buttons += `<button class="complete-btn" onclick="updateAppointmentStatus(${appointment.id}, 'completed')">Mark as Completed</button>`;
-                        buttons += `<button class="reschedule-btn" onclick="rescheduleAppointment(${appointment.id})">Reschedule</button>`;
-                    } 
-                    // If pending, only Reschedule button
-                    else if (appointment.status === "pending") {
-                        buttons += `<button class="reschedule-btn" onclick="rescheduleAppointment(${appointment.id})">Reschedule</button>`;
-                    } 
-                    // If completed, disable reschedule
-                    else if (appointment.status === "completed") {
-                        buttons += `<button class="reschedule-btn disabled" disabled>Cannot Reschedule</button>`;
+                        buttons += `<button class="complete-btn" onclick="markAsCompleted(${appointment.id})">Mark as Completed</button>`;
                     }
 
                     appointmentCard.innerHTML = `
@@ -115,23 +99,22 @@
             }
         }
 
-        // Update appointment status (Mark as completed)
-        async function updateAppointmentStatus(appointmentId, status) {
+        async function markAsCompleted(appointmentId) {
             try {
-                const response = await fetch(`${API_BASE}/appointments/manage/${appointmentId}/`, {
+                const response = await fetch(`${API_BASE}/appointments/complete/${appointmentId}/`, {
                     method: "PATCH",
                     headers: {
                         "Authorization": `Bearer ${token}`,
                         "Content-Type": "application/json"
                     },
-                    body: JSON.stringify({ status: status })
+                    body: JSON.stringify({ status: "complete" })
                 });
 
                 if (!response.ok) {
-                    throw new Error("Failed to update appointment.");
+                    throw new Error("Failed to mark appointment as completed.");
                 }
 
-                alert(`Appointment marked as ${status}!`);
+                alert("Appointment marked as completed!");
                 fetchAppointments(); // Refresh list
             } catch (error) {
                 console.error("Error updating appointment:", error);
@@ -139,12 +122,6 @@
             }
         }
 
-        // Placeholder function for rescheduling appointment
-        function rescheduleAppointment(appointmentId) {
-            alert(`Reschedule functionality to be implemented for appointment ID: ${appointmentId}`);
-        }
-
-        // Load appointments when page loads
         fetchAppointments();
     </script>
 </body>

@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Prescriptions</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: white;
+            color: black;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 900px;
+            margin: auto;
+            padding: 20px;
+        }
+        h2 {
+            color: #d63384;
+            text-align: center;
+        }
+        .card {
+            background: #fff0f6;
+            border: 1px solid #d63384;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+        }
+        input, button {
+            padding: 10px;
+            margin: 5px;
+            border: 1px solid #d63384;
+            border-radius: 5px;
+        }
+        button {
+            cursor: pointer;
+            font-weight: bold;
+            background-color: #d63384;
+            color: white;
+            border: none;
+        }
+        .reset-btn {
+            background-color: #ff4d4f;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>💊 My Prescriptions</h2>
+
+        <!-- Filters -->
+        <div>
+            <input type="text" id="doctorName" placeholder="Enter doctor's name">
+            <input type="date" id="appointmentDate">
+            <button onclick="applyFilters()">Apply Filters</button>
+            <button class="reset-btn" onclick="resetFilters()">Reset Filters</button>
+        </div>
+
+        <!-- Prescriptions List -->
+        <div id="prescriptions"></div>
+    </div>
+
+    <script>
+        const API_BASE = "http://127.0.0.1:8000/api"; 
+        const token = localStorage.getItem('token');
+
+        // Redirect if token is missing (user not logged in)
+        if (!token) {
+            alert("Access Denied. Please log in.");
+            window.location.href = "login.html";
+        }
+
+        // Fetch all prescriptions (sorted by most recent first)
+        async function fetchPrescriptions(query = "") {
+            try {
+                const response = await fetch(`${API_BASE}/my-prescriptions/${query}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await response.json();
+
+                const prescriptionsDiv = document.getElementById("prescriptions");
+                prescriptionsDiv.innerHTML = "";
+
+                if (data.length === 0) {
+                    prescriptionsDiv.innerHTML = "<p>No prescriptions found.</p>";
+                    return;
+                }
+
+                // Sort prescriptions by date (most recent first)
+                const sortedPrescriptions = data.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+                sortedPrescriptions.forEach(prescription => {
+                    const prescriptionCard = document.createElement("div");
+                    prescriptionCard.classList.add("card");
+                    prescriptionCard.innerHTML = `
+                        <p><strong>Doctor:</strong> ${prescription.doctor_name}</p>
+                        <p><strong>Date:</strong> ${prescription.date} | <strong>Time:</strong> ${prescription.time}</p>
+                        <p><strong>Prescription:</strong> ${prescription.prescription}</p>
+                    `;
+                    prescriptionsDiv.appendChild(prescriptionCard);
+                });
+            } catch (error) {
+                console.error("Error fetching prescriptions:", error);
+            }
+        }
+
+        // Apply Filters
+        function applyFilters() {
+            const doctorName = document.getElementById("doctorName").value.trim();
+            const appointmentDate = document.getElementById("appointmentDate").value;
+
+            let query = "?";
+            if (doctorName) query += `doctor_name=${doctorName}&`;
+            if (appointmentDate) query += `date=${appointmentDate}`;
+
+            fetchPrescriptions(query);
+        }
+
+        // Reset Filters
+        function resetFilters() {
+            document.getElementById("doctorName").value = "";
+            document.getElementById("appointmentDate").value = "";
+            fetchPrescriptions(); // Load all prescriptions
+        }
+
+        // Load prescriptions when page loads
+        fetchPrescriptions();
+    </script>
+</body>
+</html>
